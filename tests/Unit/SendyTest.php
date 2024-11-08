@@ -9,9 +9,12 @@ use GuzzleHttp\Psr7\Response;
 use Heterodoks\LaravelSendy\Exceptions\SendyException;
 use Heterodoks\LaravelSendy\Facades\Sendy;
 use Heterodoks\LaravelSendy\Tests\TestCase;
+use Heterodoks\LaravelSendy\Tests\TestHelper;
 
 class SendyTest extends TestCase
 {
+    use TestHelper;
+
     protected function mockClientResponse(string $body, int $status = 200): void
     {
         $mock = new MockHandler([
@@ -21,9 +24,10 @@ class SendyTest extends TestCase
         $handlerStack = HandlerStack::create($mock);
         $client = new Client(['handler' => $handlerStack]);
         
-        $this->app->bind('sendy', function ($app) use ($client) {
-            return new \Heterodoks\LaravelSendy\Sendy($app['config']['sendy']);
-        });
+        $sendy = new \Heterodoks\LaravelSendy\Sendy($this->app['config']['sendy']);
+        $this->setProperty($sendy, 'client', $client);
+        
+        $this->app->instance('sendy', $sendy);
     }
 
     public function test_can_subscribe_user(): void
@@ -70,10 +74,10 @@ class SendyTest extends TestCase
 
     public function test_throws_exception_on_error(): void
     {
-        $this->mockClientResponse('API key not passed');
+        $this->mockClientResponse('Error: API key not passed');
 
         $this->expectException(SendyException::class);
-        $this->expectExceptionMessage('API key not passed');
+        $this->expectExceptionMessage('Error: API key not passed');
 
         Sendy::subscribe('test-list-id', 'test@example.com');
     }

@@ -3,7 +3,7 @@
 namespace Heterodoks\LaravelSendy;
 
 use GuzzleHttp\Client;
-use YourVendor\LaravelSendy\Exceptions\SendyException;
+use Heterodoks\LaravelSendy\Exceptions\SendyException;
 
 class Sendy
 {
