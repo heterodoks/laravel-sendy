@@ -4,6 +4,7 @@ namespace Heterodoks\LaravelSendy;
 
 use GuzzleHttp\Client;
 use Heterodoks\LaravelSendy\Exceptions\SendyException;
+use Illuminate\Support\Facades\Log;
 
 class Sendy
 {
@@ -21,13 +22,17 @@ class Sendy
 
     public function subscribe(string $listId, string $email, string $name = '', array $customFields = [], bool $gdprConsent = true): bool
     {
-        $response = $this->post('subscribers/subscribe', [
+        $data = [
             'list' => $listId,
             'email' => $email,
             'name' => $name,
-            'custom_fields' => $customFields,
             'boolean' => $gdprConsent ? 'true' : 'false'
-        ]);
+        ];
+
+        // Merge custom fields directly into the request parameters
+        $data = array_merge($data, $customFields);
+
+        $response = $this->post('subscribers/subscribe', $data);
 
         return $response === '1';
     }
@@ -238,12 +243,24 @@ class Sendy
 
         $path = $endpoints[$endpoint] ?? $endpoint;
 
+        // Debug the actual request data
+        Log::channel('daily')->info('Sendy API Request', [
+            'endpoint' => $path,
+            'data' => $data
+        ]);
+
         try {
             $response = $this->client->post($path, [
                 'form_params' => $data,
+                'debug' => true  // This will log the actual HTTP request
             ]);
 
             $body = (string) $response->getBody();
+
+            // Debug the response
+            Log::channel('daily')->info('Sendy API Response', [
+                'body' => $body
+            ]);
 
             if (str_contains(strtolower($body), 'error')) {
                 throw new SendyException($body);
