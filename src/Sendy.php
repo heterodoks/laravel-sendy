@@ -14,7 +14,7 @@ class Sendy
     {
         $this->config = $config;
         $this->client = new Client([
-            'base_uri' => rtrim($config['url'], '/') . '/api/',
+            'base_uri' => rtrim($config['url'], '/') . '/',
             'timeout' => $config['timeout'],
         ]);
     }
@@ -223,8 +223,23 @@ class Sendy
     {
         $data['api_key'] = $this->config['api_key'];
 
+        $endpoints = [
+            'subscribers/subscribe' => 'subscribe',
+            'subscribers/unsubscribe' => 'unsubscribe',
+            'subscribers/subscription-status' => 'api/subscribers/subscription-status',
+            'subscribers/active-subscriber-count' => 'api/subscribers/active-subscriber-count',
+            'subscribers/delete' => 'api/subscribers/delete',
+            'subscribers/edit' => 'api/subscribers/edit',
+            'subscribers/total-active' => 'api/subscribers/total-active',
+            'campaigns/create' => 'api/campaigns/create',
+            'campaigns/create-draft' => 'api/campaigns/create-draft',
+            'campaigns/schedule' => 'api/campaigns/schedule'
+        ];
+
+        $path = $endpoints[$endpoint] ?? $endpoint;
+
         try {
-            $response = $this->client->post($endpoint, [
+            $response = $this->client->post($path, [
                 'form_params' => $data,
             ]);
 
